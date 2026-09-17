@@ -1,0 +1,9 @@
+rules:
+  - id: hindari-eval
+    pattern: eval(...)
+    message: Pemakaian eval() memungkinkan eksekusi kode dari input tak tepercaya.
+    languages: [javascript, typescript]
+    severity: ERROR
+    metadata:
+      owasp: "A03:2021 - Injection"
+      cwe: "CWE-95"
