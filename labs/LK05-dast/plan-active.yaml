@@ -1,0 +1,17 @@
+env:
+  contexts:
+    - name: juice
+      urls: ["http://host.docker.internal:3000"]
+  parameters: { failOnError: false, progressToStdout: true }
+jobs:
+  - type: spider
+    parameters: { url: "http://host.docker.internal:3000", maxDuration: 3 }
+  - type: passiveScan-wait
+  - type: activeScan
+    parameters: { maxRuleDurationInMins: 2, maxScanDurationInMins: 20 }
+  - type: report
+    parameters:
+      template: traditional-html
+      reportDir: /zap/wrk
+      reportFile: zap-active
+      reportTitle: "DAST Active Juice Shop - ds-235150201111019"

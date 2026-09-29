@@ -13,13 +13,13 @@
 ## Deklarasi keaslian
 
 - [ ] Semua luaran adalah hasil kerja saya sendiri.
-- [ ] Bukti memuat watermark `ds-23515201111019`.
+- [ ] Bukti memuat watermark `ds-235150201111019`.
 - [ ] Saya siap menjelaskan & mereproduksi pekerjaan saat viva.
 
 ## Penggunaan bantuan AI (wajib diungkapkan)
 
-- Tool : ChatGPT Codex untuk memahami error dan menyesuaikan commands linux dengan windows
-- Bagian: <bagian mana yang dibantu; saya tetap memahami & bertanggung jawab penuh>
+- Tool : ChatGPT Codex untuk menyesuaikan perintah Linux ke PowerShell, menjalankan ZAP, dan menyusun laporan LK05.
+- Bagian: `labs/LK05-dast/soal.md`, `plan.yaml`, `plan-active.yaml`, dan `README.md`; hasil scan diperiksa dari laporan ZAP. Saya tetap bertanggung jawab atas isi dan reproduksinya.
 
 ---
 
