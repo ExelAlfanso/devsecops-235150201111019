@@ -1,4 +1,4 @@
-# IDENTITY
+﻿# IDENTITY
 
 > Isi SEMUA field. Ganti setiap `<...>`. File ini dipakai dosen untuk memverifikasi scope & keaslian.
 
@@ -18,9 +18,11 @@
 
 ## Penggunaan bantuan AI (wajib diungkapkan)
 
-- Tool : ChatGPT Codex untuk menyesuaikan perintah Linux ke PowerShell, menjalankan ZAP, dan menyusun laporan LK05.
-- Bagian: `labs/LK05-dast/soal.md`, `plan.yaml`, `plan-active.yaml`, dan `README.md`; hasil scan diperiksa dari laporan ZAP. Saya tetap bertanggung jawab atas isi dan reproduksinya.
+- Tool : ChatGPT Codex untuk menyesuaikan perintah Linux ke PowerShell, menjalankan ZAP, serta membantu menyusun laporan LK05 dan draf README LK06.
+- Bagian: LK05 (`labs/LK05-dast/soal.md`, `plan.yaml`, `plan-active.yaml`, dan `README.md`) serta `labs/LK06-exploit/README.md`, yang disusun berdasarkan soal dan bukti repo. Saya bertanggung jawab memverifikasi isi, menyesuaikan refleksi dengan pengalaman sendiri, dan mereproduksi hasil.
 
 ---
 
 _Watermark: ds-235150201111019 — Exel Boy Alfanso (235150201111019)_
+
+
