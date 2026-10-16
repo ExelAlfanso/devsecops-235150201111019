@@ -5,10 +5,10 @@
 - Nama : Exel Boy Alfanso
 - NIM : 235150201111019
 - Watermark (WM) : ds-235150201111019
-- OWASP Primary : A010 <!-- k = (dua_digit_terakhir_NIM mod 10) + 1 -->
+- OWASP Primary : A10 <!-- k = (dua_digit_terakhir_NIM mod 10) + 1 -->
 - OWASP Secondary : A02 <!-- m = ((dua_digit_terakhir_NIM div 10) mod 10) + 1 -->
 - Target App : OWASP Juice Shop <!-- atau sesuai rotasi kelas -->
-- Repo : https://github.com/ExelAlfanso/devsecops-235150201111019
+- Repo : https://github.com/    ExelAlfanso/devsecops-235150201111019
 
 ## Deklarasi keaslian
 
@@ -18,8 +18,8 @@
 
 ## Penggunaan bantuan AI (wajib diungkapkan)
 
-- Tool : ChatGPT Codex untuk menyesuaikan perintah Linux ke PowerShell, menjalankan ZAP, serta membantu menyusun laporan LK05 dan draf README LK06.
-- Bagian: LK05 (`labs/LK05-dast/soal.md`, `plan.yaml`, `plan-active.yaml`, dan `README.md`) serta `labs/LK06-exploit/README.md`, yang disusun berdasarkan soal dan bukti repo. Saya bertanggung jawab memverifikasi isi, menyesuaikan refleksi dengan pengalaman sendiri, dan mereproduksi hasil.
+- Tool : ChatGPT Codex untuk menyesuaikan perintah Linux ke PowerShell, menjalankan ZAP, serta membantu menyusun laporan LK05, draf README LK06, VA UTS, dan writeup CTF.
+- Bagian: LK05 (`labs/LK05-dast/soal.md`, `plan.yaml`, `plan-active.yaml`, dan `README.md`), `labs/LK06-exploit/README.md`, `project/vulnerability-assessment.md`, `project/risk-register.csv`, serta `exam/uts/challenges.md`. Writeup CTF dibantu susun dari catatan langkah yang saya berikan, screenshot/artefak pada `exam/uts/bukti/`, dan source lokal. Saya bertanggung jawab memverifikasi langkah, flag, bukti, dan reproduksi sebelum pengumpulan.
 
 ---
 

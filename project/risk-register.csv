@@ -1,4 +1,15 @@
-id,judul,kategori_owasp,cwe,severity,likelihood,impact,cvss_base,cvss_vector,epss,bukti,rekomendasi,status,keputusan
-VA-01,SQLi pada login,A03,CWE-89,High,High,High,9.8,CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H,,labs/LK06-exploit/bukti/sqli-login.png,parameterized query,open,
-VA-02,Stored XSS pada komentar,A03,CWE-79,Medium,Medium,High,6.1,,,labs/LK06-exploit/bukti/xss.png,output encoding+CSP,open,
-VA-03,Komponen usang,A06,CWE-1104,High,Medium,High,7.5,,,labs/LK03-sca-secret/trivy-fs.json,update dependency,open,
+id,judul,kategori_owasp,cwe,severity,likelihood,impact,bukti,rekomendasi,status
+VA-09,GDPR Data Erasure,A04/A07,CWE-672,Medium,Medium,High,exam/uts/bukti/gdpr-data-erasure-2.png,Pastikan erasure mencabut akses akun dan sesi,challenge_solved_terbukti
+VA-12,Allowlist Bypass,A01,CWE-601,Medium,Medium,High,exam/uts/bukti/allowed-bypass-3.png,Validasi URL redirect hasil normalisasi,challenge_solved_terbukti
+VA-13,Reset Jim's Password,A07,CWE-640,Medium,Medium,High,exam/uts/bukti/reset-jim-1.png,Ganti pertanyaan publik dengan token reset sekali pakai,challenge_solved_terbukti
+VA-15,Video XSS,A03,CWE-79,Medium,Medium,High,exam/uts/bukti/videoxss-3.png,Encode output dan sanitasi konten video,challenge_solved_flag_diberikan
+VA-16,Server-side XSS Protection,A03,CWE-79,Medium,Medium,High,exam/uts/bukti/serverside-xss-2.png,Sanitasi HTML dan encode output,challenge_solved_flag_diberikan
+VA-17,NoSQL Exfiltration,A03,CWE-943,Medium,Medium,High,exam/uts/bukti/nosqlexfiltration.png,Validasi tipe query dan otorisasi pesanan,challenge_solved_flag_diberikan
+VA-18,Login Bjoern,A07,CWE-287,Medium,Medium,High,exam/uts/bukti/login-bjoern-1.png,Validasi token OAuth di server,challenge_solved_terbukti
+VA-03,DOM XSS pencarian,A03,CWE-79,Medium,Medium,High,labs/LK06-exploit/bukti/xss-dom.png,Encode output dan gunakan API DOM aman,terkonfirmasi_lokal
+VA-04,SSRF upload foto profil,A10,CWE-918,Medium,Medium,High,exam/uts/bukti/ssrf-2.png,Batasi tujuan fetch dan egress container,challenge_solved_terbukti
+VA-08,Bjoern's Favorite Pet,A07,CWE-640,Medium,Medium,High,exam/uts/bukti/bjoern-2.png,Ganti pertanyaan publik dengan token reset sekali pakai,challenge_solved_terbukti
+VA-10,Web3 Sandbox terbuka,A01,CWE-862,Medium,Medium,Medium,exam/uts/bukti/web3sandbox.png,Batasi akses sandbox dan validasi otorisasi,challenge_solved_terbukti
+VA-11,Outdated Allowlist,A01,CWE-601,Medium,Medium,Medium,exam/uts/bukti/crypto-1.png,Hapus target usang dan validasi redirect,challenge_solved_terbukti
+VA-19,Weird Crypto,A02,CWE-916,Medium,Medium,High,exam/uts/bukti/weirdcrypto.png,Ganti MD5 untuk sandi dengan Argon2id dan salt unik,challenge_solved_terbukti
+VA-07,Header CSP tidak ada,A05,CWE-693,Low,Low,Medium,labs/LK05-dast/zap-baseline.json,Tetapkan CSP ketat dan uji regresi,terkonfirmasi_lokal
