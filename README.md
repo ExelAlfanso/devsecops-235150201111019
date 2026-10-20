@@ -1,5 +1,7 @@
 # DevSecOps — Repo Tugas Mahasiswa
 
+![CI](https://github.com/Devsecops-Filkom-2026/devsecops-235150201111019/actions/workflows/ci.yml/badge.svg)
+
 Template repositori untuk mata kuliah DevSecOps (CIF60038). Repo ini di-provision menjadi
 `devsecops-<nim>` (private) untuk tiap mahasiswa, di dalam organisasi
 [Devsecops-Filkom-2026](https://github.com/Devsecops-Filkom-2026). Kerjakan semua hands-on di sini,
@@ -39,15 +41,11 @@ lebih dulu.
 | Workflow | Kapan | Fungsi | LK/CB |
 |---|---|---|---|
 | `validate.yml` | tiap push | cek kelengkapan repo dan watermark | — |
-| `ci.yml` | push/PR | build dan smoke test | LK07 |
+| `ci.yml` | PR / manual | build dan smoke test | LK07 |
 | `security.yml` | push/PR | SAST, SCA, secret (gate) | CB2 |
 | `dast.yml` | PR / manual | ZAP baseline (aplikasi ephemeral) | LK08 |
 
-Untuk menampilkan badge status, ganti `<nim>` pada tautan berikut lalu tempel di bagian atas README:
-```
-![CI](https://github.com/Devsecops-Filkom-2026/devsecops-<nim>/actions/workflows/ci.yml/badge.svg)
-![Security](https://github.com/Devsecops-Filkom-2026/devsecops-<nim>/actions/workflows/security.yml/badge.svg)
-```
+Badge CI di bagian atas menampilkan status workflow terakhir.
 
 ## Scan lokal (opsional, lewat Docker)
 

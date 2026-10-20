@@ -2,6 +2,7 @@
 .env
 *.env
 !.env.example
+/actions-runner/
 
 # Dependencies / build
 node_modules/

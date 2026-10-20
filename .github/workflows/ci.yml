@@ -10,8 +10,11 @@ concurrency:
 
 jobs:
   build-test:
-    runs-on: [self-hosted]      # runner di laptop Anda (lihat Bagian B.1)
+    runs-on: [self-hosted, Windows]
     timeout-minutes: 15
+    defaults:
+      run:
+        shell: powershell
     steps:
       - name: Ambil kode
         uses: actions/checkout@v4
@@ -19,19 +22,34 @@ jobs:
       - name: Build image (atau pakai image publik bila belum ada app/)
         id: build
         run: |
-          if [ -f app/Dockerfile ]; then
+          if (Test-Path app/Dockerfile) {
             docker build -t app:ci ./app
-            echo "image=app:ci" >> "$GITHUB_OUTPUT"
-          else
+            if ($LASTEXITCODE -ne 0) { throw 'Docker build gagal' }
+            'image=app:ci' | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          } else {
             docker pull bkimminich/juice-shop
-            echo "image=bkimminich/juice-shop" >> "$GITHUB_OUTPUT"
-          fi
+            if ($LASTEXITCODE -ne 0) { throw 'Docker pull gagal' }
+            'image=bkimminich/juice-shop' | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          }
 
       - name: Smoke test (aplikasi benar-benar bisa jalan)
         run: |
-          docker run -d --rm -p 3000:3000 --name app "${{ steps.build.outputs.image }}"
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:3000 > /dev/null && ok=1 && break || sleep 3
-          done
-          docker stop app || true
-          [ "${ok:-0}" = "1" ] && echo "App up" || { echo "App tidak merespons"; exit 1; }
+          $container = docker run -d --rm -p 127.0.0.1::3000 "${{ steps.build.outputs.image }}"
+          if ($LASTEXITCODE -ne 0) { throw 'Docker run gagal' }
+          try {
+            $binding = docker port $container 3000/tcp
+            if ($LASTEXITCODE -ne 0) { throw 'Port container tidak ditemukan' }
+            $port = ($binding -split ':')[-1]
+            $ok = $false
+            for ($i = 0; $i -lt 30; $i++) {
+              try {
+                Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:$port" -TimeoutSec 3 -ErrorAction Stop | Out-Null
+                $ok = $true
+                break
+              } catch { Start-Sleep -Seconds 3 }
+            }
+            if (-not $ok) { docker logs $container; throw 'App tidak merespons' }
+            Write-Output 'App up'
+          } finally {
+            docker stop $container | Out-Null
+          }
