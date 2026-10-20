@@ -1,34 +1,37 @@
 name: CI
 on:
-  push:
-    branches: [ main ]
   pull_request:
-  workflow_dispatch:
+    paths-ignore: [ '**.md', 'labs/**', 'project/**', 'docs/**' ]
+  workflow_dispatch:          # bisa dijalankan manual dari tab Actions
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-test:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted]      # runner di laptop Anda (lihat Bagian B.1)
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - name: Ambil kode
+        uses: actions/checkout@v4
 
-      - name: Build app image (jika ada app/Dockerfile)
+      - name: Build image (atau pakai image publik bila belum ada app/)
         id: build
         run: |
           if [ -f app/Dockerfile ]; then
             docker build -t app:ci ./app
             echo "image=app:ci" >> "$GITHUB_OUTPUT"
           else
-            echo "Belum ada app/Dockerfile — memakai image target untuk smoke test."
             docker pull bkimminich/juice-shop
             echo "image=bkimminich/juice-shop" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Smoke test
+      - name: Smoke test (aplikasi benar-benar bisa jalan)
         run: |
           docker run -d --rm -p 3000:3000 --name app "${{ steps.build.outputs.image }}"
           for i in $(seq 1 30); do
             curl -sf http://localhost:3000 > /dev/null && ok=1 && break || sleep 3
           done
           docker stop app || true
-          if [ "${ok:-0}" != "1" ]; then echo "App tidak merespons"; exit 1; fi
-          echo "App up ✅"
+          [ "${ok:-0}" = "1" ] && echo "App up" || { echo "App tidak merespons"; exit 1; }
