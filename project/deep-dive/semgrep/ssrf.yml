@@ -1,0 +1,23 @@
+rules:
+  - id: ds-235150201111019-ssrf
+    message: >-
+      Potensi SSRF: input body pengguna digunakan sebagai URL fetch tanpa
+      pembatasan tujuan. Batasi tujuan request sebelum fetch. WM ds-235150201111019.
+    severity: ERROR
+    languages: [typescript, javascript]
+    mode: taint
+    metadata:
+      cwe: "CWE-918: Server-Side Request Forgery (SSRF)"
+      owasp: "A10:2021 - Server-Side Request Forgery (SSRF)"
+    paths:
+      exclude:
+        - "data/static/codefixes/"
+        - "test/"
+    # shortcut: hanya melacak body ke fetch dalam satu fungsi, perluas jika source atau sink berubah.
+    pattern-sources:
+      - pattern: $REQ.body.$FIELD
+        exact: true
+    pattern-sinks:
+      - patterns:
+          - pattern: fetch($URL, ...)
+          - focus-metavariable: $URL
