@@ -1,49 +1,84 @@
 name: Security
 on:
   push:
-    branches: [ main ]
   pull_request:
   workflow_dispatch:
 
-# Catatan: SARIF diunggah sebagai ARTIFACT (bukan Code Scanning), agar berjalan di repo private
-# tanpa GitHub Advanced Security. Bila GHAS tersedia, boleh ganti ke upload-sarif.
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: pwsh
 
 jobs:
+  regression-test:
+    runs-on: [self-hosted, Windows]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with: { clean: false }
+      - name: Pasang dependensi (dilewati bila sudah ada)
+        working-directory: app
+        run: |
+          if (!(Test-Path 'build/server.js') -or !(Test-Path 'frontend/dist/frontend/index.html')) {
+            npm install --no-audit --no-fund
+            if ($LASTEXITCODE -ne 0) { throw 'npm install gagal' }
+          }
+      - name: Tes regresi — gate
+        working-directory: app
+        run: |
+          $env:PORT = '3999'
+          node --import ./test/api/helpers/test-env.mjs --import tsx --test "test/api/*.regression.test.ts"
+          if ($LASTEXITCODE -ne 0) { throw 'Tes regresi gagal' }
+
+  sast-custom:
+    runs-on: [self-hosted, Windows]
+    steps:
+      - uses: actions/checkout@v4
+        with: { clean: false }
+      - name: Semgrep custom rule — gate
+        run: |
+          docker run --rm -v "${PWD}:/repo" -w /repo semgrep/semgrep:1.181.0 semgrep scan --metrics=off --error --config project/deep-dive/semgrep/ app
+          if ($LASTEXITCODE -ne 0) { throw 'Semgrep custom menemukan pola rentan atau gagal dijalankan' }
+
   secret-scan:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Windows]
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - name: Gitleaks (via image resmi, tanpa lisensi)
+        with: { clean: false, fetch-depth: 0 }
+      - name: Gitleaks (commit setelah v-vuln) — gate
         run: |
-          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest \
-            detect --source=/repo --report-format json --report-path=/repo/gitleaks.json --redact
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with: { name: gitleaks-report, path: gitleaks.json }
+          docker run --rm -v "${PWD}:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --no-banner --redact --log-opts="v-vuln..HEAD"
+          if ($LASTEXITCODE -ne 0) { throw 'Gitleaks menemukan secret baru atau gagal dijalankan' }
 
-  sca:
-    runs-on: ubuntu-latest
+  sast-owasp-report:
+    runs-on: [self-hosted, Windows]
     steps:
       - uses: actions/checkout@v4
-      - name: Trivy filesystem (SCA) — GATE
-        uses: aquasecurity/trivy-action@0.24.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          severity: CRITICAL,HIGH
-          exit-code: '1'          # gagalkan bila ada temuan tinggi
-          ignore-unfixed: true
-          format: table
-
-  sast:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Semgrep (OWASP Top 10) → SARIF
+        with: { clean: false }
+      - name: Semgrep OWASP Top 10 (laporan)
         run: |
-          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep \
-            semgrep --config p/owasp-top-ten --sarif -o semgrep.sarif || true
+          docker run --rm -v "${PWD}:/repo" -w /repo semgrep/semgrep:1.181.0 semgrep scan --metrics=off --config p/owasp-top-ten --json -o semgrep-owasp.json app
+          if ($LASTEXITCODE -ne 0) { throw 'Semgrep OWASP gagal dijalankan' }
       - uses: actions/upload-artifact@v4
+        with: { name: semgrep-owasp, path: semgrep-owasp.json, retention-days: 1 }
+
+  sca-report:
+    runs-on: [self-hosted, Windows]
+    steps:
+      - uses: actions/checkout@v4
+        with: { clean: false }
+      - name: Buat lockfile (Juice Shop tidak menyertakannya)
+        run: |
+          docker run --rm -e HOME=/tmp -v "${PWD}/app:/src" -w /src node:24 npm install --package-lock-only --package-lock=true --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { throw 'Pembuatan package-lock.json gagal' }
+      - name: Trivy SCA (laporan)
+        run: |
+          docker run --rm -v "${PWD}:/repo" -v trivy-cache:/root/.cache aquasec/trivy:0.76.1 fs --scanners vuln --severity HIGH,CRITICAL --format json -o /repo/trivy-sca.json /repo/app
+          if ($LASTEXITCODE -ne 0) { throw 'Trivy gagal dijalankan' }
+      - name: Hapus lockfile sementara
         if: always()
-        with: { name: semgrep-sarif, path: semgrep.sarif }
+        run: Remove-Item app/package-lock.json -Force -ErrorAction SilentlyContinue
+      - uses: actions/upload-artifact@v4
+        with: { name: trivy-sca, path: trivy-sca.json, retention-days: 1 }

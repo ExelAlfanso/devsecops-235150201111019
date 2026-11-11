@@ -11,13 +11,14 @@ concurrency:
 jobs:
   build-test:
     runs-on: [self-hosted, Windows]
-    timeout-minutes: 15
+    timeout-minutes: 45
     defaults:
       run:
         shell: powershell
     steps:
       - name: Ambil kode
         uses: actions/checkout@v4
+        with: { clean: false }
 
       - name: Build image (atau pakai image publik bila belum ada app/)
         id: build
