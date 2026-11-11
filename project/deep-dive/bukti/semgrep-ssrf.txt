@@ -1,0 +1,43 @@
+PS C:\Users\thecl\OneDrive\Documents\Projects\devsecops-workspace\devsecops-235150201111019> docker run --rm --mount "type=bind,source=$((Resolve-Path .\app).Path),target=/src" --mount "type=bind,source=$((Resolve-Path .\project\deep-dive\semgrep).Path),target=/rules" semgrep/semgrep semgrep --config /rules/ssrf.yml /src
+Rule rules.ds-235150201111019-ssrf contains an exclude pattern 'data/static/codefixes/' that will soon be interpreted as '/data/static/codefixes/' to comply with the Semgrepignore v2 and Gitignore specifications. To make this pattern permanently unanchored, edit rule rules.ds-235150201111019-ssrf and change it to '**/data/static/codefixes/'. To confirm the anchored behavior and avoid this warning, change it to '/data/static/codefixes/'.
+Rule rules.ds-235150201111019-ssrf contains an exclude pattern 'data/static/codefixes/' that will soon be interpreted as '/data/static/codefixes/' to comply with the Semgrepignore v2 and Gitignore specifications. To make this pattern permanently unanchored, edit rule rules.ds-235150201111019-ssrf and change it to '**/data/static/codefixes/'. To confirm the anchored behavior and avoid this warning, change it to '/data/static/codefixes/'.
+               
+               
+┌─────────────┐
+│ Scan Status │
+└─────────────┘
+  Scanning 1191 files tracked by git with 1 Code rule:
+  Scanning 431 files.
+Rule rules.ds-235150201111019-ssrf contains an exclude pattern 'data/static/codefixes/' that will soon be interpreted as '/data/static/codefixes/' to comply with the Semgrepignore v2 and Gitignore specifications. To make this pattern permanently unanchored, edit rule rules.ds-235150201111019-ssrf and change it to '**/data/static/codefixes/'. To confirm the anchored behavior and avoid this warning, change it to '/data/static/codefixes/'.
+Rule rules.ds-235150201111019-ssrf contains an exclude pattern 'data/static/codefixes/' that will soon be interpreted as '/data/static/codefixes/' to comply with the Semgrepignore v2 and Gitignore specifications. To make this pattern permanently unanchored, edit rule rules.ds-235150201111019-ssrf and change it to '**/data/static/codefixes/'. To confirm the anchored behavior and avoid this warning, change it to '/data/static/codefixes/'.
+                  
+                  
+┌────────────────┐
+│ 1 Code Finding │
+└────────────────┘
+                                        
+    /src/routes/profileImageUrlUpload.ts
+   ❯❯❱ rules.ds-235150201111019-ssrf
+          ❰❰ Blocking ❱❱
+          Potensi SSRF: input body pengguna digunakan sebagai URL fetch tanpa pembatasan tujuan. Batasi tujuan
+          request sebelum fetch. WM ds-235150201111019.                                                       
+                                                                                                              
+           24┆ const response = await fetch(url)
+
+                
+                
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 1 (1 blocking)
+ • Rules run: 1
+ • Targets scanned: 431
+ • Parsed lines: ~100.0%
+ • Scan skipped: 
+   ◦ Files larger than  files 1.0 MB: 2
+   ◦ Files matching .semgrepignore patterns: 7
+ • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
+Ran 1 rule on 431 files: 1 finding.
+
+A new version of Semgrep is available. See https://semgrep.dev/docs/upgrading
