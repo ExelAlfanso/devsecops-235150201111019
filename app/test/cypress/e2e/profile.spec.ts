@@ -3,15 +3,16 @@ describe('/profile', () => {
     cy.login({ email: 'admin', password: 'admin123' })
   })
   describe('challenge "ssrfChallenge"', () => {
-    it('should be possible to request internal resources using image upload URL', () => {
+    it('should block requests to internal resources using image upload URL', () => {
       cy.visit('/profile')
 
       cy.get('#url').type(
         `${Cypress.config('baseUrl')}/solve/challenges/server-side?key=tRy_H4rd3r_n0thIng_iS_Imp0ssibl3`
       )
       cy.get('#submitUrl').click()
-      cy.visit('/')
-      cy.expectChallengeSolved({ challenge: 'SSRF' })
+      cy.request('/api/Challenges/?key=ssrfChallenge').then(({ body }) => {
+        expect(body.data[0].solved).to.equal(false)
+      })
     })
   })
 

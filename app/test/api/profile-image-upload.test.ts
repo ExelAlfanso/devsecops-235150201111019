@@ -3,15 +3,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { describe, it, before, after } from 'node:test'
+import { describe, it, before } from 'node:test'
 import assert from 'node:assert/strict'
 import request from 'supertest'
 import type { Express } from 'express'
 import config from 'config'
 import path from 'node:path'
-import http from 'node:http'
 import fs from 'node:fs'
-import { type AddressInfo } from 'node:net'
 import { createTestApp } from './helpers/setup'
 import { login } from './helpers/auth'
 
@@ -89,7 +87,12 @@ void describe('/profile/image/file', () => {
 })
 
 void describe('/profile/image/url', () => {
-  void it('POST profile image URL valid for image available online', async () => {
+  void it('POST profile image URL from an allowed host and reject redirects', async (t) => {
+    t.mock.method(globalThis, 'fetch', async (_url: string | URL | Request, options?: RequestInit) => {
+      assert.equal(options?.redirect, 'error')
+      return new Response(null, { status: 404 })
+    })
+
     const { token } = await login(app, {
       email: `jim@${config.get<string>('application.domain')}`,
       password: 'ncc-1701'
@@ -98,7 +101,7 @@ void describe('/profile/image/url', () => {
     const res = await request(app)
       .post('/profile/image/url')
       .set('Cookie', `token=${token}`)
-      .field('imageUrl', 'cataas.com/cat')
+      .field('imageUrl', 'https://cataas.com/cat')
       .redirects(0)
 
     assert.equal(res.status, 302)
@@ -149,11 +152,10 @@ void describe('/profile/image/url', () => {
   })
 })
 
-void describe('/profile/image/url (with local mock server)', () => {
-  let mockServer: http.Server
-  let mockPort: number
+void describe('/profile/image/url (mocked fetch)', () => {
   let token: string
   let userId: number
+  let imageBuffer: Buffer
 
   before(async () => {
     const { token: userToken } = await login(app, {
@@ -163,67 +165,54 @@ void describe('/profile/image/url (with local mock server)', () => {
     token = userToken
     userId = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString()).data.id
 
-    const imageBuffer = fs.readFileSync(path.resolve(__dirname, '../files/validProfileImage.jpg'))
-
-    mockServer = http.createServer((req, res) => {
-      if (req.url?.includes('non-ok')) {
-        res.statusCode = 404
-        res.end()
-      } else if (req.url?.includes('no-body')) {
-        res.statusCode = 204
-        res.end()
-      } else {
-        res.statusCode = 200
-        res.setHeader('Content-Type', 'image/jpeg')
-        res.end(imageBuffer)
-      }
-    })
-    await new Promise<void>((resolve) => { mockServer.listen(0, resolve) })
-    mockPort = (mockServer.address() as AddressInfo).port
+    imageBuffer = fs.readFileSync(path.resolve(__dirname, '../files/validProfileImage.jpg'))
   })
 
-  after(async () => {
-    await new Promise<void>((resolve, reject) => {
-      mockServer.close((err) => { err != null ? reject(err) : resolve() })
-    })
-  })
-
-  void it('POST with non-OK response falls back to storing URL as profile image', async () => {
+  void it('POST with non-OK response falls back to storing URL as profile image', async (t) => {
+    t.mock.method(globalThis, 'fetch', async () => new Response(null, { status: 404 }))
     const res = await request(app)
       .post('/profile/image/url')
       .set('Cookie', `token=${token}`)
-      .field('imageUrl', `http://localhost:${mockPort}/non-ok.jpg`)
+      .field('imageUrl', 'https://cataas.com/non-ok.jpg')
       .redirects(0)
 
     assert.equal(res.status, 302)
   })
 
-  void it('POST with empty-body response (204) falls back to storing URL as profile image', async () => {
+  void it('POST with empty-body response (204) falls back to storing URL as profile image', async (t) => {
+    t.mock.method(globalThis, 'fetch', async () => new Response(null, { status: 204 }))
     const res = await request(app)
       .post('/profile/image/url')
       .set('Cookie', `token=${token}`)
-      .field('imageUrl', `http://localhost:${mockPort}/no-body.jpg`)
+      .field('imageUrl', 'https://cataas.com/no-body.jpg')
       .redirects(0)
 
     assert.equal(res.status, 302)
   })
 
-  void it('POST with valid response writes file and redirects to profile', async () => {
+  void it('POST with valid response writes file and rejects redirects', async (t) => {
+    let redirect: string | undefined
+    t.mock.method(globalThis, 'fetch', async (_url: string | URL | Request, options?: RequestInit) => {
+      redirect = options?.redirect
+      return new Response(imageBuffer, { status: 200, headers: { 'Content-Type': 'image/jpeg' } })
+    })
     const res = await request(app)
       .post('/profile/image/url')
       .set('Cookie', `token=${token}`)
-      .field('imageUrl', `http://localhost:${mockPort}/photo.jpg`)
+      .field('imageUrl', 'https://cataas.com/photo.jpg')
       .redirects(0)
 
     assert.equal(res.status, 302)
     assert.ok(res.headers.location?.endsWith('/profile'))
+    assert.equal(redirect, 'error')
   })
 
-  void it('POST with PNG URL extension saves file using PNG extension', async () => {
+  void it('POST with PNG URL extension saves file using PNG extension', async (t) => {
+    t.mock.method(globalThis, 'fetch', async () => new Response(imageBuffer, { status: 200 }))
     await request(app)
       .post('/profile/image/url')
       .set('Cookie', `token=${token}`)
-      .field('imageUrl', `http://localhost:${mockPort}/photo.png`)
+      .field('imageUrl', 'https://cataas.com/photo.png')
       .redirects(0)
 
     assert.ok(
@@ -232,11 +221,12 @@ void describe('/profile/image/url (with local mock server)', () => {
     )
   })
 
-  void it('POST with unrecognised URL extension defaults to JPG extension', async () => {
+  void it('POST with unrecognised URL extension defaults to JPG extension', async (t) => {
+    t.mock.method(globalThis, 'fetch', async () => new Response(imageBuffer, { status: 200 }))
     await request(app)
       .post('/profile/image/url')
       .set('Cookie', `token=${token}`)
-      .field('imageUrl', `http://localhost:${mockPort}/photo.bmp`)
+      .field('imageUrl', 'https://cataas.com/photo.bmp')
       .redirects(0)
 
     assert.ok(

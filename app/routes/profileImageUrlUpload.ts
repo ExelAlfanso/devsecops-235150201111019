@@ -13,6 +13,9 @@ import { UserModel } from '../models/user'
 import * as utils from '../lib/utils'
 import logger from '../lib/logger'
 
+// shortcut: only cataas.com is allowed; add trusted providers when the app specifies them.
+const ALLOWED_HOSTS = new Set(['cataas.com'])
+
 export function profileImageUrlUpload () {
   return async (req: Request, res: Response, next: NextFunction) => {
     if (req.body.imageUrl !== undefined) {
@@ -21,7 +24,11 @@ export function profileImageUrlUpload () {
       const loggedInUser = security.authenticatedUsers.get(req.cookies.token)
       if (loggedInUser) {
         try {
-          const response = await fetch(url)
+          const imageUrl = new URL(url)
+          if (imageUrl.protocol !== 'https:' || !ALLOWED_HOSTS.has(imageUrl.hostname) || imageUrl.port !== '' || imageUrl.username !== '' || imageUrl.password !== '') {
+            throw new Error('Profile image URL must use HTTPS and an allowed host')
+          }
+          const response = await fetch(imageUrl, { redirect: 'error' })
           if (!response.ok || !response.body) {
             throw new Error('url returned a non-OK status code or an empty body')
           }
