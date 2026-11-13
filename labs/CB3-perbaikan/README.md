@@ -9,7 +9,7 @@ Saya juga menjalankan PoC pada dua container baru. Image rentan menyelesaikan ch
 ## Tautan
 
 - Repo: [Devsecops-Filkom-2026/devsecops-235150201111019](https://github.com/Devsecops-Filkom-2026/devsecops-235150201111019).
-- Pull request: akan ditautkan setelah dibuat di repo kelas.
+- Pull request: [fix/ssrfChallenge → main (#4)](https://github.com/Devsecops-Filkom-2026/devsecops-235150201111019/pull/4).
 - Screencast 80 detik: [ssrf-regresi-sanitized.mp4](bukti/ssrf-regresi-sanitized.mp4). Notifikasi pesan di pojok kanan bawah ditutup pada salinan ini.
 - GitHub Actions: runner `EXELPC` terdaftar di repo ini, tetapi statusnya offline; tes lokal tetap lulus.
 - Analisis: [02-analysis.md](../../project/deep-dive/02-analysis.md)
