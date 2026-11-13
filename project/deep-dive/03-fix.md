@@ -19,7 +19,7 @@ Route kini mem-parse URL dan hanya menerima HTTPS ke hostname tepat `cataas.com`
 
 ## Batas verifikasi
 
-Allowlist membatasi tujuan ke satu hostname dan menolak redirect, tetapi tidak melakukan pinning alamat DNS. PoC dan regresi menguji akses loopback; DNS rebinding tidak diuji. Tes Cypress dan screencast belum tersedia. GitHub Actions juga belum memberi hasil: job `completeness` dan `zap-baseline` berhenti sebelum runner dijalankan karena akun terkunci akibat masalah billing; job lainnya masih antre.
+Allowlist membatasi tujuan ke satu hostname dan menolak redirect, tetapi tidak melakukan pinning alamat DNS. PoC dan regresi menguji akses loopback; DNS rebinding tidak diuji. Screencast 80 detik tersedia di `labs/CB3-perbaikan/bukti/ssrf-regresi-sanitized.mp4`; notifikasi pesan di pojok kanan bawah ditutup pada salinan publik. Tes Cypress belum dijalankan. GitHub Actions juga belum memberi hasil: job `completeness` dan `zap-baseline` berhenti sebelum runner dijalankan karena akun terkunci akibat masalah billing; job lainnya masih antre.
 
 ---
 
