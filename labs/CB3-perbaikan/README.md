@@ -11,5 +11,6 @@ Saya juga menjalankan PoC pada dua container baru. Image rentan menyelesaikan ch
 - Repo: [ExelAlfanso/devsecops-235150201111019](https://github.com/ExelAlfanso/devsecops-235150201111019) (repo mandiri karena fork repo kelas dinonaktifkan).
 - Pull request: [fix/ssrfChallenge → main](https://github.com/ExelAlfanso/devsecops-235150201111019/pull/1).
 - Screencast/asciinema: belum direkam.
+- GitHub Actions: runner belum berjalan karena akun terkunci akibat masalah billing; tes lokal tetap lulus.
 - Analisis: [02-analysis.md](../../project/deep-dive/02-analysis.md)
 - Perbaikan dan bukti: [03-fix.md](../../project/deep-dive/03-fix.md)
