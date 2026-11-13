@@ -11,12 +11,20 @@ rules:
       owasp: "A10:2021 - Server-Side Request Forgery (SSRF)"
     paths:
       exclude:
-        - "data/static/codefixes/"
-        - "test/"
+        - "**/data/static/codefixes/**"
+        - "**/test/**"
     # shortcut: hanya melacak body ke fetch dalam satu fungsi, perluas jika source atau sink berubah.
     pattern-sources:
       - pattern: $REQ.body.$FIELD
         exact: true
+    pattern-sanitizers:
+      - patterns:
+          - pattern-inside: |
+              if ($URL.protocol !== 'https:' || !$HOSTS.has($URL.hostname) || $URL.port !== '' || $URL.username !== '' || $URL.password !== '') {
+                ...
+              }
+              ...
+          - pattern: $URL
     pattern-sinks:
       - patterns:
           - pattern: fetch($URL, ...)

