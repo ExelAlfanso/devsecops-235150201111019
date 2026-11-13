@@ -8,7 +8,8 @@ Saya juga menjalankan PoC pada dua container baru. Image rentan menyelesaikan ch
 
 ## Tautan
 
-- Pull request: menunggu URL repo pribadi. Fork dari repo kelas dinonaktifkan oleh GitHub.
+- Repo: [ExelAlfanso/devsecops-235150201111019](https://github.com/ExelAlfanso/devsecops-235150201111019) (repo mandiri karena fork repo kelas dinonaktifkan).
+- Pull request: [fix/ssrfChallenge → main](https://github.com/ExelAlfanso/devsecops-235150201111019/pull/1).
 - Screencast/asciinema: belum direkam.
 - Analisis: [02-analysis.md](../../project/deep-dive/02-analysis.md)
 - Perbaikan dan bukti: [03-fix.md](../../project/deep-dive/03-fix.md)

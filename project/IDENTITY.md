@@ -8,7 +8,7 @@
 - OWASP Primary : A10 <!-- k = (dua_digit_terakhir_NIM mod 10) + 1 -->
 - OWASP Secondary : A02 <!-- m = ((dua_digit_terakhir_NIM div 10) mod 10) + 1 -->
 - Target App : OWASP Juice Shop <!-- atau sesuai rotasi kelas -->
-- Repo : https://github.com/    ExelAlfanso/devsecops-235150201111019
+- Repo : https://github.com/ExelAlfanso/devsecops-235150201111019
 
 ## Deklarasi keaslian
 
