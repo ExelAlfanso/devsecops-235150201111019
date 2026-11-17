@@ -44,7 +44,7 @@ Alamat `172.22.0.1` adalah alamat yang terlihat oleh container dari jaringan Doc
 
 - **ZAP baseline:** konfigurasi workflow tersedia, tetapi artifact laporan CB4 belum ditemukan. Setelah job dijalankan, catat 2–3 alert yang relevan, tingkatnya, serta keputusan untuk tiap temuan.
 - **Trivy image:** artifact `project/trivy-image.json` belum tersedia. Jalankan scan pada image `app:ci`, lalu bandingkan temuan paket OS dan paket Node sebelum mengisi risk register.
-- **GitHub Actions:** hasil run final belum tersedia. [`dast.yml`](../../.github/workflows/dast.yml) sekarang memanggil `poc.ps1`, membedakan exit `0` (masih rentan), `1` (tertutup), dan `2` (prasyarat gagal), serta memperbaiki teardown. Workflow belum dijalankan end-to-end; catatan [03-fix.md](03-fix.md) menyebut runner `EXELPC` offline saat verifikasi sebelumnya.
+- **GitHub Actions:** hasil run final belum tersedia. Run terakhir gagal sebelum Docker dijalankan karena Windows runner memakai `bash.exe` yang tidak dapat membuka skrip sementara ber-path Windows. [`dast.yml`](../../.github/workflows/dast.yml) kini memakai PowerShell pada runner Windows, memanggil `poc.ps1`, membedakan exit `0` (masih rentan), `1` (tertutup), dan `2` (prasyarat gagal), serta memperbaiki teardown. Workflow perlu dijalankan ulang untuk mengonfirmasi perbaikan.
 
 ## Risiko tersisa dan keputusan
 
@@ -52,7 +52,7 @@ Alamat `172.22.0.1` adalah alamat yang terlihat oleh container dari jaringan Doc
 |---|---|---|
 | DNS rebinding terhadap hostname yang diizinkan | Belum diuji; allowlist tidak melakukan DNS pinning. | Diterima sementara untuk demo lokal. Uji DNS rebinding dan pertimbangkan pembatasan egress sebelum menyatakan mitigasi menyeluruh. |
 | Temuan ZAP / Trivy pada image final | Belum dinilai karena artifact CB4 belum ada. | Belum diputuskan. Tambahkan temuan yang tidak diperbaiki ke [risk register](../risk-register.csv) dengan alasan `accepted` atau kontrol `mitigated`. |
-| Gate DAST end-to-end | Workflow diperbarui, tetapi belum terverifikasi karena runner offline pada percobaan sebelumnya. | Jangan klaim gate hijau sebelum run sukses pada image final. |
+| Gate DAST end-to-end | Run terakhir gagal sebelum build karena shell Bash tidak menangani path Windows; workflow kini memakai PowerShell. | Jalankan ulang dan pastikan gate PoC hijau sebelum mengklaim validasi end-to-end. |
 | Cypress SSRF | Belum dijalankan menurut [03-fix.md](03-fix.md). | Jalankan bila dibutuhkan sebagai bukti tambahan sebelum tag `v-final`. |
 
 ## Kesimpulan

@@ -8,41 +8,50 @@ permissions:
 
 defaults:
   run:
-    shell: bash
+    shell: pwsh
 
 jobs:
   exploit-as-test: # GATE
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, Windows]
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
         with: { clean: false }
       - name: Build & start app (ephemeral)
         run: |
-          docker build -t app:ci app/     # tag sama dgn ci.yml → cache hit
-          docker rm -f app 2>/dev/null || true
-          # tambahkan  -e NODE_ENV=unsafe  bila challenge Anda bertanda Danger Zone
+          docker build -t app:ci app/
+          if ($LASTEXITCODE -ne 0) { throw 'Docker build gagal' }
+          docker rm -f app *> $null
           docker run -d --rm -p 3000:3000 --name app app:ci
-          for i in $(seq 1 40); do curl -sf http://localhost:3000 >/dev/null && break || sleep 3; done
+          if ($LASTEXITCODE -ne 0) { throw 'Docker run gagal' }
+          $ready = $false
+          for ($i = 0; $i -lt 40; $i++) {
+            try {
+              Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost:3000' -TimeoutSec 3 -ErrorAction Stop | Out-Null
+              $ready = $true
+              break
+            } catch {
+              Start-Sleep -Seconds 3
+            }
+          }
+          if (-not $ready) {
+            docker logs app
+            throw 'Aplikasi tidak siap'
+          }
       - name: Jalankan PoC (gate)
         run: |
-          # poc.ps1: exit 0 = rentan, exit 1 = sudah tertutup, exit 2 = prasyarat gagal
-          set +e
-          pwsh -NoProfile -File project/deep-dive/poc.ps1
-          poc_status=$?
-          set -e
-          if [ "$poc_status" -eq 0 ]; then
-            echo "Eksploit masih berhasil — kerentanan belum tertutup"; exit 1
-          elif [ "$poc_status" -eq 1 ]; then
-            echo "Eksploit gagal — kerentanan tertutup"; exit 0
-          else
-            echo "PoC gagal menjalankan prasyarat (exit $poc_status)"; exit "$poc_status"
-          fi
+          pwsh -NoProfile -File project/deep-dive/poc.ps1 -TargetHost 'http://localhost:3000'
+          $pocStatus = $LASTEXITCODE
+          if ($pocStatus -eq 0) { throw 'Eksploit masih berhasil — kerentanan belum tertutup' }
+          if ($pocStatus -eq 1) { Write-Host 'Eksploit gagal — kerentanan tertutup'; exit 0 }
+          throw "PoC gagal menjalankan prasyarat (exit $pocStatus)"
       - name: Teardown
         if: always()
-        run: docker stop app || true
+        run: |
+          docker stop app *> $null
+          if ($LASTEXITCODE -ne 0) { Write-Host 'Container app sudah berhenti atau tidak ada.' }
   zap-baseline: # LAPORAN (gagal hanya bila ada alert yang Anda set FAIL)
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, Windows]
     needs: exploit-as-test
     timeout-minutes: 30
     steps:
@@ -50,31 +59,45 @@ jobs:
         with: { clean: false }
       - name: Start app & ZAP baseline
         run: |
-          docker build -t app:ci app/                     # cache hit
-          docker network create dast-net 2>/dev/null || true
-          docker rm -f zapapp 2>/dev/null || true
+          docker build -t app:ci app/
+          if ($LASTEXITCODE -ne 0) { throw 'Docker build gagal' }
+          docker network inspect dast-net *> $null
+          if ($LASTEXITCODE -ne 0) {
+            docker network create dast-net | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw 'Docker network gagal dibuat' }
+          }
+          docker rm -f zapapp *> $null
           docker run -d --rm --network dast-net --name zapapp app:ci
-          sleep 40
-          mkdir -p zap-out && chmod 777 zap-out && cp .zap/rules.tsv zap-out/
-          docker run --rm --network dast-net -v "$PWD/zap-out:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:2.17.0 \
-            zap-baseline.py -t http://zapapp:3000 -c rules.tsv -I -J zap-report.json -r zap-report.html
+          if ($LASTEXITCODE -ne 0) { throw 'Container aplikasi untuk ZAP gagal dijalankan' }
+          Start-Sleep -Seconds 40
+          New-Item -ItemType Directory -Force -Path zap-out | Out-Null
+          Copy-Item .zap/rules.tsv zap-out/rules.tsv -Force
+          $zapOut = (Resolve-Path zap-out).Path
+          docker run --rm --network dast-net --mount "type=bind,source=$zapOut,target=/zap/wrk" ghcr.io/zaproxy/zaproxy:2.17.0 zap-baseline.py -t http://zapapp:3000 -c rules.tsv -I -J zap-report.json -r zap-report.html
+          if ($LASTEXITCODE -ne 0) { throw 'ZAP baseline gagal' }
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: zap-report, path: zap-out/, retention-days: 1 }
       - name: Teardown
         if: always()
-        run: docker stop zapapp || true
+        run: |
+          docker stop zapapp *> $null
+          docker network rm dast-net *> $null
 
   image-scan: # LAPORAN
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, Windows]
     steps:
       - uses: actions/checkout@v4
         with: { clean: false }
-      - run: docker build -t app:ci app/ # cache hit
+      - name: Build image
+        run: |
+          docker build -t app:ci app/
+          if ($LASTEXITCODE -ne 0) { throw 'Docker build gagal' }
       - name: Trivy image (versi di-pin, bukan trivy-action)
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v trivy-cache:/root/.cache \
-            -v "$PWD:/out" aquasec/trivy:0.76.1 image --scanners vuln --severity HIGH,CRITICAL \
-            --ignore-unfixed --format json -o /out/trivy-image.json app:ci
+          $trivyOutput = docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v trivy-cache:/root/.cache aquasec/trivy:0.76.1 image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --format json app:ci
+          $trivyExitCode = $LASTEXITCODE
+          $trivyOutput | Set-Content -Path trivy-image.json -Encoding utf8NoBOM
+          if ($trivyExitCode -ne 0) { throw 'Trivy image scan gagal' }
       - uses: actions/upload-artifact@v4
         with: { name: trivy-image, path: trivy-image.json, retention-days: 1 }
