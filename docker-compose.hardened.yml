@@ -1,0 +1,20 @@
+services:
+  app:
+    build: ./app # pakai Dockerfile distroless Juice Shop
+    image: app:final
+    read_only: true # filesystem image tidak bisa diubah...
+    tmpfs: [/tmp]
+    volumes: # ...kecuali folder yang memang ditulis Juice Shop saat start/berjalan
+      - jsdata:/juice-shop/data # database SQLite
+      - jsftp:/juice-shop/ftp
+      - jslogs:/juice-shop/logs
+      - jsi18n:/juice-shop/i18n
+      - jsdist:/juice-shop/frontend/dist # Juice Shop menulis ulang index.html & aset saat start
+      - jswk:/juice-shop/.well-known
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: 512m
+    pids_limit: 200
+    ports: ["3000:3000"]
+    # environment: [ "NODE_ENV=unsafe" ]   # hanya bila challenge Anda Danger Zone
+volumes: { jsdata: {}, jsftp: {}, jslogs: {}, jsi18n: {}, jsdist: {}, jswk: {} }
